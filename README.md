@@ -82,27 +82,39 @@ docker compose down -v
 | `03-architecture/` | 기술 아키텍처 | API 설계, DB 스키마 |
 | `04-implementation/` | 구현 가이드 | 개발 계획 |
 | `prompts/` | AI 프롬프트 | 각 단계별 사용된 프롬프트 모음 |
-| `tutorial/` | 강의 자료 | Doc-First AI 개발 가이드, 강의 교안 |
+| `bugfix/` | 버그 수정 기록 | 버그 수정 로그, 프롬프트 로그 |
+| `tutorial/` | 강의 자료 | Doc-First AI 개발 가이드, GitHub 협업 가이드 |
 
 ## 디렉토리 구조
 
 ```
-example-project/
+fc-ica-doc-first-dev/
 ├── docs/                  # 프로젝트 문서 (Doc-First)
 │   ├── 01-requirements/   # 요구사항 (PRD, 유저 스토리)
 │   ├── 02-design/         # UI/UX 설계 (와이어프레임)
 │   ├── 03-architecture/   # 아키텍처 (API 설계, DB 스키마)
 │   ├── 04-implementation/ # 구현 가이드
+│   ├── bugfix/            # 버그 수정 기록
 │   ├── prompts/           # AI 프롬프트 모음
-│   └── tutorial/          # 강의 자료 (Doc-First AI 개발 가이드)
+│   └── tutorial/          # 강의 자료 (Doc-First AI 개발, GitHub 협업)
 ├── frontend/              # Next.js 프론트엔드
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── next.config.js
+│   ├── tailwind.config.ts
+│   ├── tsconfig.json
 │   └── src/
 │       ├── app/           # 페이지 (대시보드, 로그인, 프로젝트)
 │       ├── components/    # 공통 UI 컴포넌트
 │       ├── lib/           # API 클라이언트
 │       └── types/         # TypeScript 타입 정의
 ├── backend/               # FastAPI 백엔드
+│   ├── Dockerfile
+│   ├── requirements.txt
 │   └── app/
+│       ├── main.py        # FastAPI 앱 엔트리포인트
+│       ├── config.py      # 설정 (환경 변수)
+│       ├── database.py    # DB 연결 설정
 │       ├── api/           # API 라우터 (인증, 프로젝트, 태스크)
 │       ├── models/        # SQLAlchemy 모델
 │       ├── schemas/       # Pydantic 스키마
