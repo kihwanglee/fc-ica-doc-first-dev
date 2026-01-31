@@ -121,6 +121,10 @@ fc-ica-doc-first-dev/
 │       ├── models/        # SQLAlchemy 모델
 │       ├── schemas/       # Pydantic 스키마
 │       └── utils/         # 유틸리티 (인증 등)
+├── .claude/
+│   └── rules/             # Claude Code 프로젝트 규칙
+├── .cursor/
+│   └── rules/             # Cursor 프로젝트 규칙
 ├── docker-compose.yml
 ├── .env.example
 └── README.md
