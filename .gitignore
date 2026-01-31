@@ -40,4 +40,5 @@ docker-compose.override.yml
 # 기타
 # ============================================
 *.log
-.claude/
+.claude/*
+!.claude/rules/
