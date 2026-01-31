@@ -164,7 +164,9 @@ project-root/
 │       ├── api.prompt.md
 │       └── new-feature.prompt.md
 ├── src/ (또는 backend/, frontend/)
-├── .cursorrules                       # Cursor AI 행동 규칙
+├── .cursor/
+│   └── rules/                         # Cursor AI 행동 규칙 (MDC 형식)
+│       └── taskflow.mdc               # 프로젝트 전체 규칙
 └── README.md
 ```
 
@@ -172,7 +174,46 @@ project-root/
 
 ## 5. Cursor Project Rules 설정
 
-`.cursorrules` 파일은 Cursor AI의 행동을 제약하는 프로젝트 규칙이다. Doc-First 방법론의 **자동 안전장치** 역할을 한다.
+Cursor의 프로젝트 규칙은 `.cursor/rules/` 디렉토리에 `.mdc`(Markdown with Context) 파일로 관리한다. Doc-First 방법론의 **자동 안전장치** 역할을 한다.
+
+> **참고: 레거시 형식 `.cursorrules`에서의 마이그레이션**
+> 프로젝트 루트의 `.cursorrules` 파일은 레거시 형식으로, 아직 동작하지만 deprecated 되었다.
+> 현재 권장 형식은 `.cursor/rules/*.mdc`이며, 다음과 같은 장점이 있다:
+> - **규칙 분리**: 백엔드, 프론트엔드, 공통 규칙 등을 별도 파일로 관리 가능
+> - **스코프 지정**: `globs` 패턴으로 특정 파일/디렉토리에만 규칙 적용 가능
+> - **조건부 적용**: `alwaysApply: true/false`로 항상 적용 여부 제어 가능
+
+### MDC 파일 구조
+
+`.mdc` 파일은 frontmatter와 본문으로 구성된다:
+
+```markdown
+---
+description: 규칙에 대한 설명 (Cursor가 규칙 선택 시 참고)
+globs: "backend/**/*.py"            # 적용 대상 파일 패턴 (비워두면 description 기반 자동 적용)
+alwaysApply: true                   # true면 모든 컨텍스트에 항상 적용
+---
+
+# 여기에 실제 규칙 내용을 작성한다
+```
+
+| 필드 | 설명 | 예시 |
+|------|------|------|
+| `description` | 규칙의 목적 설명. Cursor가 자동으로 규칙을 선택할 때 참고 | `"FastAPI 백엔드 코딩 컨벤션"` |
+| `globs` | 규칙이 적용될 파일 패턴 | `"backend/**/*.py"`, `"*.tsx"` |
+| `alwaysApply` | `true`면 모든 대화에 항상 적용 | `true` / `false` |
+
+### 규칙 파일 분리 예시
+
+```
+.cursor/rules/
+├── doc-first.mdc          # Doc-First 원칙 (alwaysApply: true)
+├── backend.mdc            # 백엔드 규칙 (globs: "backend/**")
+├── frontend.mdc           # 프론트엔드 규칙 (globs: "frontend/**")
+└── docker.mdc             # Docker 규칙 (globs: "**/docker-compose*.yml, **/Dockerfile")
+```
+
+프로젝트 초기에는 하나의 파일로 시작하고, 규칙이 많아지면 분리하는 것을 권장한다.
 
 ### 5.1 필수 규칙
 
@@ -266,7 +307,7 @@ project-root/
 
 ### 5.4 이 규칙이 중요한 이유
 
-`.cursorrules`가 없으면, 개발자가 매번 프롬프트에 "이 문서를 참조해서..."라고 쓰는 것을 잊을 때마다 바이브 코딩으로 돌아간다. 규칙 파일은 **잊어도 작동하는 안전장치**다.
+`.cursor/rules/` 규칙 파일이 없으면, 개발자가 매번 프롬프트에 "이 문서를 참조해서..."라고 쓰는 것을 잊을 때마다 바이브 코딩으로 돌아간다. 규칙 파일은 **잊어도 작동하는 안전장치**다.
 
 ---
 
@@ -900,9 +941,9 @@ PRD의 F3 기능(태스크 관리)에 '태그 기능'을 추가해야 해.
 
 | 실패 패턴 | 증상 | 해결책 |
 |-----------|------|--------|
-| 문서 안 읽고 코드 생성 | AI가 설계와 다른 구조로 코드를 만듦 | `.cursorrules`에 문서 참조 강제 규칙 추가 |
+| 문서 안 읽고 코드 생성 | AI가 설계와 다른 구조로 코드를 만듦 | `.cursor/rules/`에 문서 참조 강제 규칙 추가 |
 | 요구사항 변경 후 코드만 수정 | 문서와 코드가 점점 괴리됨 | 변경 시 문서 먼저 수정하는 워크플로우 고정 |
-| AI가 매번 다른 스타일로 생성 | 파일마다 네이밍, 구조가 제각각 | `.cursorrules`에 코딩 컨벤션 명시 |
+| AI가 매번 다른 스타일로 생성 | 파일마다 네이밍, 구조가 제각각 | `.cursor/rules/`에 코딩 컨벤션 명시 |
 | 한 번에 전체 구현 요청 | 컨텍스트 오버플로우, 불완전한 코드 | 기능 단위로 분할 요청 |
 | 모호한 프롬프트 | "코드 짜줘" → 의도와 다른 결과 | 참조 문서 + 범위 + 대상 파일 항상 명시 |
 | Cursor가 문서를 참조하지 않음 | 설계와 무관한 코드 생성 | `@docs/파일명` 으로 명시적 멘션 |
@@ -914,7 +955,7 @@ PRD의 F3 기능(태스크 관리)에 '태그 기능'을 추가해야 해.
 ### 프로젝트 시작 시
 
 - [ ] 문서 디렉토리 구조 생성 (`docs/01~04`)
-- [ ] `.cursorrules` 파일 작성
+- [ ] `.cursor/rules/*.mdc` 규칙 파일 작성
 - [ ] 기술 스택 확정
 
 ### Phase 1: 요구사항

@@ -1,3 +1,9 @@
+---
+description: TaskFlow 프로젝트 전체 규칙 — Doc-First 원칙, 코딩 컨벤션, API/DB 참조
+globs:
+alwaysApply: true
+---
+
 # TaskFlow 프로젝트 Cursor Rules
 
 ## 프로젝트 개요
