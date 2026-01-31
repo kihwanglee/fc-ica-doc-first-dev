@@ -102,7 +102,11 @@
   └── 기능별 반복 구현 (문서 참조 → 코드 생성 → 검증)
   |
   v
-[Phase 6] 유지보수
+[Phase 6] 테스트
+  └── 통합 테스트 (API 스모크 → API 자동화 → E2E)
+  |
+  v
+[Phase 7] 유지보수
   └── 변경 시 문서 먼저 수정 → 코드 반영 → 변경 이력 기록
 ```
 
@@ -133,6 +137,9 @@ DB 설계 ←── PRD + API 설계
   │
   v
 코드 생성 ←── 해당 기능의 설계 문서
+  │
+  v
+테스트 ←── API 설계 + 사용자 스토리 + 와이어프레임
 ```
 
 ---
@@ -900,7 +907,103 @@ Step 3: "Task 모델과 CRUD API 구현해줘"
 
 ---
 
-## 8. 변경 관리
+## 8. 테스트: 문서 기반 통합 테스트
+
+### 8.1 테스트도 문서에서 시작한다
+
+Doc-First 방법론에서 테스트 역시 **설계 문서에서 파생**된다. API 설계 문서가 있으면 API 테스트를, 사용자 스토리가 있으면 E2E 테스트를, 와이어프레임이 있으면 UI 테스트를 생성할 수 있다.
+
+```
+API 설계 문서  ──→  API 스모크 테스트 (curl)
+                ──→  API 자동화 테스트 (Python)
+
+사용자 스토리   ──→  전체 흐름 테스트 시나리오
+와이어프레임    ──→  E2E 테스트 (Playwright)
+```
+
+### 8.2 테스트 종류와 사용 시점
+
+| 단계 | 도구 | 참조 문서 | 사용 시점 |
+|------|------|-----------|-----------|
+| API 스모크 테스트 | curl / bash | API 설계 | `docker compose up` 직후 빠른 검증 |
+| API 자동화 테스트 | pytest + requests | API 설계 + 사용자 스토리 | 기능 구현 후 회귀 테스트 |
+| E2E 테스트 | Playwright | 와이어프레임 + UI 디자인 | 배포 전 최종 검증 |
+
+### 8.3 테스트 생성 프롬프트 패턴
+
+테스트 코드를 AI에게 생성시킬 때도 **참조 문서 + 범위 + 대상 파일**을 명시한다.
+
+```
+BAD:  "테스트 코드 짜줘"
+GOOD: "docs/03-architecture/api-design.md를 참조하여
+       회원가입 → 로그인 → 프로젝트 생성 → 태스크 관리의
+       전체 흐름을 검증하는 pytest 테스트를 작성해줘"
+```
+
+#### curl 스모크 테스트 프롬프트
+
+```
+@docs/03-architecture/api-design.md
+
+위 API 설계 문서를 참조하여 curl 기반 스모크 테스트 bash 스크립트를 작성해줘.
+회원가입 → 로그인 → 프로젝트 생성 → 태스크 생성 → 상태 변경 흐름을 테스트해줘.
+각 단계에서 HTTP 상태 코드를 확인하고, 실패 시 중단해줘.
+
+파일 위치: tests/smoke-test.sh
+```
+
+#### Python API 테스트 프롬프트
+
+```
+@docs/03-architecture/api-design.md
+@docs/01-requirements/user-stories.md
+
+위 문서를 참조하여 pytest + requests 기반 API 통합 테스트를 작성해줘.
+인증, 프로젝트 CRUD, 태스크 CRUD, 전체 흐름 테스트를 포함해줘.
+
+파일 위치: tests/test_api.py
+```
+
+#### Playwright E2E 테스트 프롬프트
+
+```
+@docs/02-design/wireframe.md
+@docs/02-design/ui-design.md
+
+위 문서를 참조하여 Playwright E2E 테스트를 작성해줘.
+회원가입, 로그인, 프로젝트 생성, 칸반 보드에서 태스크 관리를 테스트해줘.
+
+파일 위치: tests/test_e2e.py
+```
+
+### 8.4 테스트 실행
+
+```bash
+# 1. Docker 서비스 시작
+docker compose up --build -d
+
+# 2. curl 스모크 테스트 (빠른 확인)
+bash tests/smoke-test.sh
+
+# 3. Python API 테스트 (상세 검증)
+pip install requests pytest
+pytest tests/test_api.py -v
+
+# 4. Playwright E2E 테스트 (전체 흐름)
+pip install playwright pytest-playwright
+playwright install chromium
+pytest tests/test_e2e.py -v
+```
+
+### 8.5 상세 가이드
+
+테스트 코드의 전체 예시, 실행 방법, 트러블슈팅은 별도 문서를 참조한다:
+
+→ `docs/05-testing/integration-test-guide.md`
+
+---
+
+## 9. 변경 관리
 
 ### 8.1 변경의 흐름
 
@@ -937,7 +1040,7 @@ PRD의 F3 기능(태스크 관리)에 '태그 기능'을 추가해야 해.
 
 ---
 
-## 9. 흔한 실패 패턴과 해결책
+## 10. 흔한 실패 패턴과 해결책
 
 | 실패 패턴 | 증상 | 해결책 |
 |-----------|------|--------|
@@ -950,7 +1053,7 @@ PRD의 F3 기능(태스크 관리)에 '태그 기능'을 추가해야 해.
 
 ---
 
-## 10. 전체 체크리스트
+## 11. 전체 체크리스트
 
 ### 프로젝트 시작 시
 
@@ -982,6 +1085,13 @@ PRD의 F3 기능(태스크 관리)에 '태그 기능'을 추가해야 해.
 - [ ] 기능별 반복 구현 (문서 참조 → 코드 생성 → 검증)
 - [ ] 코드 생성 후 문서와 일치성 검증
 
+### Phase 5: 테스트
+
+- [ ] curl 스모크 테스트로 API 동작 확인
+- [ ] Python 테스트로 에러 케이스 포함 자동 검증
+- [ ] Playwright E2E 테스트로 사용자 흐름 검증
+- [ ] 테스트 결과와 설계 문서 일치 확인
+
 ### 유지보수
 
 - [ ] 변경 시 문서 먼저 수정
@@ -990,7 +1100,7 @@ PRD의 F3 기능(태스크 관리)에 '태그 기능'을 추가해야 해.
 
 ---
 
-## 11. 마무리
+## 12. 마무리
 
 ### 한 줄 요약
 

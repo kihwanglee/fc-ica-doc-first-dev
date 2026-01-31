@@ -81,6 +81,7 @@ docker compose down -v
 | `02-design/` | UI/UX 설계 | 와이어프레임, UI 디자인 가이드 |
 | `03-architecture/` | 기술 아키텍처 | API 설계, DB 스키마 |
 | `04-implementation/` | 구현 가이드 | 개발 계획 |
+| `05-testing/` | 테스트 가이드 | 통합 테스트 가이드 (curl, Python, Playwright) |
 | `prompts/` | AI 프롬프트 | 각 단계별 사용된 프롬프트 모음 |
 | `bugfix/` | 버그 수정 기록 | 버그 수정 로그, 프롬프트 로그 |
 | `tutorial/` | 강의 자료 | Doc-First AI 개발 가이드, GitHub 협업 가이드 |
@@ -94,6 +95,7 @@ fc-ica-doc-first-dev/
 │   ├── 02-design/         # UI/UX 설계 (와이어프레임)
 │   ├── 03-architecture/   # 아키텍처 (API 설계, DB 스키마)
 │   ├── 04-implementation/ # 구현 가이드
+│   ├── 05-testing/        # 테스트 가이드 (통합 테스트)
 │   ├── bugfix/            # 버그 수정 기록
 │   ├── prompts/           # AI 프롬프트 모음
 │   └── tutorial/          # 강의 자료 (Doc-First AI 개발, GitHub 협업)
