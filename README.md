@@ -1,4 +1,8 @@
-# TaskFlow - 태스크 관리 SaaS
+# fc-ica-doc-first-dev
+
+Fast Campus Inner Circle AI Master Course
+
+## TaskFlow
 
 소규모 팀(3~15명)을 위한 경량 태스크 관리 SaaS입니다. 프로젝트 단위로 태스크를 칸반 보드 형태로 관리할 수 있습니다.
 
@@ -69,7 +73,7 @@ docker compose down -v
 | `JWT_ALGORITHM` | JWT 알고리즘 | `HS256` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | 액세스 토큰 만료 시간(분) | `30` |
 | `FRONTEND_URL` | 프론트엔드 URL (CORS 허용) | `http://localhost:3000` |
-| `BACKEND_URL` | 백엔드 API URL | `http://localhost:8000` |
+| `BACKEND_URL` | 백엔드 API URL | `http://localhost:8000/api/v1` |
 
 ## 프로젝트 문서 (Doc-First)
 
@@ -77,14 +81,45 @@ docker compose down -v
 
 | 폴더 | 내용 | 주요 문서 |
 |------|------|-----------|
-| `01-requirements/` | 요구사항 정의 | PRD, 유저 스토리 |
-| `02-design/` | UI/UX 설계 | 와이어프레임, UI 디자인 가이드 |
-| `03-architecture/` | 기술 아키텍처 | API 설계, DB 스키마 |
-| `04-implementation/` | 구현 가이드 | 개발 계획 |
-| `05-testing/` | 테스트 가이드 | 통합 테스트 가이드 (curl, Python, Playwright) |
-| `prompts/` | AI 프롬프트 | 각 단계별 사용된 프롬프트 모음 |
-| `bugfix/` | 버그 수정 기록 | 버그 수정 로그, 프롬프트 로그 |
-| `tutorial/` | 강의 자료 | Doc-First AI 개발 가이드, GitHub 협업 가이드 |
+| `01-requirements/` | 요구사항 정의 | [PRD](docs/01-requirements/PRD.md), [유저 스토리](docs/01-requirements/user-stories.md) |
+| `02-design/` | UI/UX 설계 | [와이어프레임](docs/02-design/wireframe.md), [UI 디자인 가이드](docs/02-design/ui-design.md) |
+| `03-architecture/` | 기술 아키텍처 | [API 설계](docs/03-architecture/api-design.md), [DB 스키마](docs/03-architecture/database-schema.md) |
+| `04-implementation/` | 구현 가이드 | [개발 계획](docs/04-implementation/development-plan.md) |
+| `05-testing/` | 테스트 가이드 | [통합 테스트 가이드](docs/05-testing/integration-test-guide.md) (curl, Python, Playwright) |
+| `prompts/` | AI 프롬프트 | [각 단계별 사용된 프롬프트 모음](docs/prompts/all-prompts.md) |
+| `bugfix/` | 버그 수정 기록 | [버그 수정 로그](docs/bugfix/bugfix-log.md), [프롬프트 로그](docs/bugfix/bugfix-prompt-log.md) |
+| `tutorial/` | 강의 자료 | [Doc-First AI 개발 가이드](docs/tutorial/doc-first-ai-dev.md), [GitHub 협업 가이드](docs/tutorial/github-collabo.md) |
+
+## 테스트 실행
+
+```bash
+# 1. Docker 서비스 실행
+docker compose up --build -d
+
+# 2. curl 스모크 테스트 (빠른 확인)
+bash tests/smoke-test.sh
+
+# 3. Python API 테스트 (상세 검증)
+pip install requests pytest
+pytest tests/test_api.py -v
+
+# 4. Playwright E2E 테스트 (전체 흐름)
+pip install playwright pytest-playwright
+playwright install chromium
+pytest tests/test_e2e.py -v
+```
+
+> 테스트 코드의 전체 예시, 실행 방법, 트러블슈팅은 [통합 테스트 가이드](docs/05-testing/integration-test-guide.md)를 참조하세요.
+
+## 튜토리얼 문서
+
+### [Doc-First AI 개발 가이드](docs/tutorial/doc-first-ai-dev.md)
+
+바이브 코딩의 한계를 분석하고, 문서를 먼저 작성한 뒤 AI로 코드를 생성하는 **Doc-First AI Development** 방법론을 다룹니다. PRD → 사용자 스토리 → 와이어프레임 → API/DB 설계 → 구현 → 테스트까지 7단계 프로세스와, 각 단계별 문서 템플릿·프롬프트 예시·체크리스트를 제공합니다. Cursor Project Rules(`.cursor/rules/*.mdc`) 설정법과 변경 관리 워크플로우도 포함되어 있습니다.
+
+### [GitHub 협업 가이드](docs/tutorial/github-collabo.md)
+
+GitHub + GitHub Desktop + Cursor를 활용한 팀 협업 실습 가이드입니다. 기획 문서 협업, 기능 개발 브랜치 공유, PR 기반 수정 요청, 충돌 해결, Issue 기반 작업 관리, Fork & PR(오픈소스 기여) 등 6가지 시나리오를 단계별로 설명합니다. 브랜치 네이밍, Conventional Commits, PR 템플릿 등 실무 컨벤션도 포함되어 있습니다.
 
 ## 디렉토리 구조
 
@@ -127,5 +162,6 @@ fc-ica-doc-first-dev/
 │   └── rules/             # Cursor 프로젝트 규칙
 ├── docker-compose.yml
 ├── .env.example
+├── .gitignore
 └── README.md
 ```
