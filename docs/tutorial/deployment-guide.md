@@ -13,6 +13,7 @@
 | 1 | [배포란 무엇인가?](#1-배포란-무엇인가) | 5분 |
 | 2 | [배포 방식의 종류](#2-배포-방식의-종류) | 5분 |
 | 3 | [TaskFlow는 왜 Vercel만으로 배포할 수 없는가?](#3-taskflow는-왜-vercel만으로-배포할-수-없는가) | 5분 |
+| 3.5 | [Vercel을 최대한 활용하는 기술 스택](#35-vercel을-최대한-활용하는-기술-스택) | 10분 |
 | 4 | [방법 A — Vercel + 외부 서비스 조합 배포](#4-방법-a--vercel--외부-서비스-조합-배포) | 15분 |
 | 5 | [방법 B — AWS EC2 + Docker 올인원 배포](#5-방법-b--aws-ec2--docker-올인원-배포) | 20분 |
 | 6 | [Nginx의 역할과 도입](#6-nginx의-역할과-도입) | 5분 |
@@ -156,6 +157,243 @@ TaskFlow처럼 **프론트엔드 + 백엔드 + DB**로 구성된 풀스택 앱�
 ```
 
 다음 섹션에서 이 두 가지 전략을 각각 실습합니다.
+
+---
+
+## 3.5. Vercel을 최대한 활용하는 기술 스택
+
+### 3.5.1 Vercel의 강점과 특화 기능
+
+Vercel은 단순한 호스팅 서비스가 아니라, **Next.js 생태계에 최적화된 통합 개발 플랫폼**입니다. Vercel을 최대한 활용하려면 Vercel의 강점을 이해하고, 그에 맞는 기술 스택을 선택해야 합니다.
+
+**Vercel의 핵심 기능들:**
+
+| 기능 | 설명 | 활용 사례 |
+|------|------|-----------|
+| **Edge Network** | 전 세계 CDN으로 정적 파일 초고속 서빙 | 프론트엔드 정적 리소스 |
+| **Serverless Functions** | API 엔드포인트를 서버리스로 실행 (10초 제한) | 간단한 API, 인증, Webhook |
+| **Edge Functions** | CDN 엣지에서 실행되는 초경량 함수 (밀리초 단위) | 리다이렉트, A/B 테스트, 지역화 |
+| **Edge Middleware** | 요청 전처리 (인증, 로깅 등) | JWT 검증, 권한 체크 |
+| **Image Optimization** | 자동 이미지 최적화 및 WebP 변환 | 이미지가 많은 서비스 |
+| **Analytics** | 실시간 트래픽 분석 및 성능 모니터링 | 사용자 행동 분석 |
+| **Preview Deployments** | PR마다 자동으로 미리보기 환경 생성 | 코드 리뷰, QA |
+| **Vercel Postgres** | Vercel과 통합된 서버리스 PostgreSQL | 간단한 DB 연동 |
+
+### 3.5.2 Vercel 친화적 기술 스택 조합
+
+Vercel을 최대한 활용하려면, **서버리스 아키텍처에 적합한 기술 스택**을 선택해야 합니다.
+
+#### 옵션 1: 풀스택 Next.js (권장)
+
+```
+┌─────────────────────────────────────────────┐
+│              Vercel 배포                    │
+├─────────────────────────────────────────────┤
+│  Next.js App Router                         │
+│    ├── /app (페이지)                        │
+│    ├── /app/api (API Routes)  ← 백엔드 대체│
+│    └── Server Components                    │
+├─────────────────────────────────────────────┤
+│  데이터베이스 선택지                         │
+│    • Vercel Postgres (통합)                 │
+│    • Neon (서버리스 PostgreSQL)             │
+│    • Supabase (PostgreSQL + Auth + Storage) │
+│    • PlanetScale (서버리스 MySQL)           │
+│    • MongoDB Atlas (서버리스 NoSQL)         │
+└─────────────────────────────────────────────┘
+```
+
+**장점:**
+- Vercel의 모든 기능을 100% 활용 가능
+- 프론트엔드와 백엔드가 하나의 저장소에 통합
+- API Routes는 자동으로 서버리스 함수로 변환
+- TypeScript로 프론트엔드와 백엔드 코드 공유
+- Edge Runtime 사용 시 전 세계 어디서나 빠른 응답
+
+**적합한 프로젝트:**
+- API가 단순하고 CRUD 중심
+- 장시간 실행이 필요 없음 (10초 제한)
+- Python 같은 특정 언어가 필수가 아님
+- 빠른 MVP 개발
+
+**기술 스택:**
+```typescript
+// 프론트엔드
+Next.js 14+ (App Router)
+React 18+
+TypeScript
+Tailwind CSS
+
+// 백엔드 (API Routes)
+Next.js API Routes
+Prisma ORM (DB 접근)
+NextAuth.js (인증)
+Zod (유효성 검증)
+
+// 데이터베이스
+Vercel Postgres (또는 Neon, Supabase)
+
+// 추가 서비스
+Vercel Blob (파일 스토리지)
+Vercel KV (Redis 대체)
+Vercel Cron (스케줄링)
+```
+
+**코드 예시:**
+
+```typescript
+// app/api/tasks/route.ts — Next.js API Route 예시
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+
+export async function GET(request: NextRequest) {
+  const tasks = await prisma.task.findMany({
+    where: { is_deleted: false },
+    orderBy: { created_at: 'desc' }
+  });
+
+  return NextResponse.json({
+    status: 'success',
+    data: tasks
+  });
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+
+  const task = await prisma.task.create({
+    data: {
+      title: body.title,
+      description: body.description,
+      project_id: body.project_id
+    }
+  });
+
+  return NextResponse.json({
+    status: 'success',
+    data: task
+  }, { status: 201 });
+}
+```
+
+#### 옵션 2: Next.js + tRPC (타입 안전성 강화)
+
+tRPC는 TypeScript로 프론트엔드와 백엔드 간 타입을 자동으로 공유하는 프레임워크입니다.
+
+```
+Next.js Frontend  ←─── 타입 자동 동기화 ───→  tRPC Backend (API Routes)
+                       (빌드 타임)
+```
+
+**장점:**
+- REST API 없이 타입 안전한 함수 호출
+- Swagger 문서 불필요 (타입이 문서 역할)
+- 프론트엔드에서 자동완성과 타입 체크
+
+**기술 스택:**
+```typescript
+// 추가 라이브러리
+@trpc/server
+@trpc/client
+@trpc/next
+@tanstack/react-query (데이터 페칭)
+
+// 나머지는 옵션 1과 동일
+```
+
+#### 옵션 3: Next.js + Prisma + Supabase (풀스택 + 인증)
+
+Supabase는 Firebase 대안으로, PostgreSQL + Auth + Storage + Realtime을 제공합니다.
+
+**장점:**
+- 인증 기능을 직접 구현할 필요 없음 (소셜 로그인, 이메일 인증 등)
+- Row Level Security (RLS)로 DB 수준 권한 제어
+- Realtime 기능 (WebSocket 대체)
+- 파일 스토리지 포함
+
+**기술 스택:**
+```typescript
+// 프론트엔드
+Next.js 14+
+TypeScript
+Tailwind CSS
+
+// 백엔드
+Next.js API Routes
+Supabase Client (DB + Auth)
+
+// 데이터베이스 & 인증
+Supabase (PostgreSQL + Auth + Storage)
+```
+
+### 3.5.3 현재 TaskFlow 프로젝트를 Vercel 친화적으로 전환하려면?
+
+현재 TaskFlow는 `Next.js (프론트엔드) + FastAPI (백엔드)` 구조입니다. Vercel을 최대한 활용하려면 다음과 같은 마이그레이션을 고려할 수 있습니다:
+
+**전환 시나리오:**
+
+```
+현재 구조:
+frontend/  (Next.js)
+backend/   (FastAPI)  ← Python 전용 서버
+
+↓ 마이그레이션
+
+새로운 구조:
+app/           (Next.js App Router)
+  ├── (routes) (페이지)
+  ├── api/     (API Routes — FastAPI를 TypeScript로 재작성)
+  └── lib/     (DB, Auth, 유틸리티)
+```
+
+**마이그레이션 단계:**
+
+1. **API 엔드포인트를 Next.js API Routes로 포팅**
+   - FastAPI의 각 라우터를 `app/api/[endpoint]/route.ts`로 변환
+   - Pydantic 모델을 Zod 스키마로 변환
+   - SQLAlchemy를 Prisma ORM으로 대체
+
+2. **데이터베이스 연결 변경**
+   - Vercel Postgres 또는 Neon으로 DB 마이그레이션
+   - Prisma를 사용하여 타입 안전한 쿼리 작성
+
+3. **인증 로직 이전**
+   - JWT 로직을 NextAuth.js 또는 Supabase Auth로 교체
+   - Edge Middleware로 보호된 라우트 구성
+
+**예상 작업량:**
+- API 엔드포인트가 20개 미만: 1-2일
+- API 엔드포인트가 20-50개: 3-5일
+- 복잡한 비즈니스 로직 포함: 1주일+
+
+**마이그레이션이 어려운 경우:**
+
+만약 다음 조건에 해당한다면, FastAPI를 유지하고 방법 A (Vercel + Render) 조합을 사용하는 것이 현실적입니다:
+
+- Python 전용 라이브러리에 의존 (NumPy, Pandas, Scikit-learn 등)
+- 머신러닝 모델 추론이 필요
+- 장시간 실행 작업 필요 (비디오 인코딩, 데이터 처리 등)
+- 팀 전체가 Python에 익숙하고 TypeScript 전환이 어려움
+
+### 3.5.4 결론: 언제 Vercel 풀스택을 선택할 것인가?
+
+```
+✅ Vercel 풀스택 (Next.js + API Routes)을 선택하세요:
+  □ API가 단순한 CRUD 중심
+  □ 서버리스 10초 제한이 문제 없음
+  □ TypeScript로 통합 개발 가능
+  □ 빠른 배포와 무료 티어 활용
+  □ Vercel의 Edge 기능 활용
+
+❌ Vercel + 외부 백엔드를 선택하세요:
+  □ Python 전용 라이브러리 필수
+  □ 장시간 실행 작업 필요
+  □ 복잡한 백엔드 로직
+  □ 기존 FastAPI 코드베이스가 큼
+  □ 레거시 시스템과 통합 필요
+```
+
+**TaskFlow의 경우:** 현재는 FastAPI를 사용하므로 **방법 A (Vercel + Render 조합)** 이 적합합니다. 하지만 학습 목적이나 장기적으로 Vercel 생태계에 완전히 통합하고 싶다면, API를 Next.js로 포팅하는 것도 고려할 수 있습니다.
 
 ---
 
@@ -866,6 +1104,143 @@ Next.js의 내장 서버도 정적 파일을 서빙할 수 있지만, Nginx는 �
 4. **모니터링** — 서버 상태, 에러, 성능 모니터링 도구 도입
 5. **백업** — 데이터베이스 정기 백업 설정
 6. **로드 밸런싱** — 트래픽 증가 시 여러 서버로 분산
+
+---
+
+## 8. AI Agent를 활용한 배포 워크플로우
+
+### 8.1 개요
+
+배포 작업을 Cursor나 Claude Code 같은 AI 코딩 도구와 함께 진행하면 효율성을 크게 높일 수 있습니다. AI Agent는 설정 파일 생성, 스크립트 작성 등의 반복적인 작업을 자동화할 수 있지만, 실제 인프라 생성이나 원격 서버 제어는 직접 해야 합니다.
+
+### 8.2 AI Agent가 도울 수 있는 부분 vs 수동 작업
+
+| 작업 유형 | AI Agent | 수동 작업 | 비율 |
+|-----------|:--------:|:---------:|:----:|
+| **설정 파일 생성** (docker-compose.prod.yml, Dockerfile.prod, nginx.conf) | ✅ | | 100% |
+| **환경 변수 템플릿 작성** (.env 파일) | ✅ | | 100% |
+| **배포 스크립트 작성** (deploy.sh) | ✅ | | 100% |
+| **AWS 인프라 생성** (EC2 인스턴스, 보안 그룹) | | ✅ | 100% |
+| **원격 서버 접속 및 명령 실행** (SSH) | | ✅ | 100% |
+| **전체 작업 비율** | 40-50% | 50-60% | - |
+
+### 8.3 추천 워크플로우 (방법 B: AWS EC2 배포)
+
+다음은 AI Agent와 수동 작업을 효과적으로 조합한 배포 워크플로우입니다:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 1: 로컬 설정 파일 준비 (AI Agent)          ⏱️  10분     │
+├─────────────────────────────────────────────────────────────────┤
+│  ✅ AI에게 프롬프트 입력                                         │
+│     → docker-compose.prod.yml 생성                               │
+│     → frontend/Dockerfile.prod 생성                              │
+│     → backend/Dockerfile 수정 (프로덕션 모드)                    │
+│     → nginx/default.conf 생성                                    │
+│     → .env.production.example 생성                               │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 2: AWS 인프라 생성 (수동)                  ⏱️  10분     │
+├─────────────────────────────────────────────────────────────────┤
+│  ✋ AWS 콘솔에서 직접 작업                                       │
+│     → EC2 인스턴스 생성 (Ubuntu 24.04, t2.small)                │
+│     → 보안 그룹 설정 (SSH:22, HTTP:80, HTTPS:443)               │
+│     → 탄력적 IP 할당                                              │
+│     → 키 페어(.pem) 다운로드                                     │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 3: 배포 스크립트 준비 (AI Agent)           ⏱️  5분      │
+├─────────────────────────────────────────────────────────────────┤
+│  ✅ AI에게 프롬프트 입력                                         │
+│     → scripts/setup-server.sh 생성 (서버 초기 설정)             │
+│     → scripts/deploy.sh 생성 (코드 배포)                        │
+│     → scripts/update.sh 생성 (코드 업데이트)                    │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 4: 서버 초기 설정 (수동 + 스크립트)        ⏱️  10분     │
+├─────────────────────────────────────────────────────────────────┤
+│  ✋ SSH 접속 후 스크립트 실행                                    │
+│     → ssh -i key.pem ubuntu@<EC2-IP>                             │
+│     → git clone <repository>                                     │
+│     → ./scripts/setup-server.sh (Docker 설치 등)                │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│  Phase 5: 서비스 배포 (수동 + 스크립트)           ⏱️  5분      │
+├─────────────────────────────────────────────────────────────────┤
+│  ✋ 환경 변수 설정 후 배포 스크립트 실행                         │
+│     → vi .env (운영 환경 변수 입력)                             │
+│     → ./scripts/deploy.sh                                        │
+│     → http://<EC2-IP> 접속 확인                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**총 소요 시간:** 약 40분 (AI 활용 시) vs 60분+ (전부 수동)
+
+### 8.4 Phase별 상세 프롬프트
+
+각 Phase에서 AI Agent에게 입력할 프롬프트는 `docs/prompts/all-prompts.md`의 **"배포 관련 프롬프트"** 섹션을 참조하세요.
+
+### 8.5 워크플로우 활용 팁
+
+1. **Phase 1에서 파일 검증하기**
+   ```bash
+   # 로컬에서 프로덕션 설정 테스트
+   docker compose -f docker-compose.prod.yml config
+   ```
+
+2. **Phase 3의 스크립트에 에러 처리 추가**
+   - 스크립트 실행 중 오류 발생 시 자동 중단 (`set -e`)
+   - 각 단계마다 성공/실패 메시지 출력
+
+3. **Phase 4는 최초 1회만 실행**
+   - 서버 초기 설정은 한 번만 하면 됨
+   - 이후 배포는 Phase 5만 반복
+
+4. **재배포 시에는 업데이트 스크립트 사용**
+   ```bash
+   # 코드 변경 후 재배포
+   git pull origin main
+   ./scripts/update.sh
+   ```
+
+### 8.6 고급: Terraform으로 인프라 자동화 (선택 사항)
+
+Phase 2의 수동 작업을 자동화하고 싶다면, AI Agent에게 Terraform 코드를 작성하게 할 수 있습니다:
+
+```
+"AWS EC2 인스턴스를 생성하는 Terraform 코드를 작성해줘.
+요구사항:
+- Ubuntu 24.04 AMI
+- t2.small 인스턴스
+- 보안 그룹: SSH(22), HTTP(80), HTTPS(443)
+- 탄력적 IP 자동 할당
+- 출력: 인스턴스 퍼블릭 IP"
+```
+
+이후 `terraform apply` 명령으로 인프라를 자동 생성할 수 있습니다. 다만, Terraform 학습 곡선이 있으므로 처음 배포하는 경우에는 수동 방식을 권장합니다.
+
+### 8.7 AI Agent 활용 시 주의사항
+
+1. **생성된 파일은 반드시 검토하기**
+   - 보안 관련 설정 (포트, 비밀번호 등)
+   - 환경 변수 경로가 올바른지 확인
+
+2. **민감한 정보는 절대 커밋하지 않기**
+   - `.env` 파일은 `.gitignore`에 추가
+   - 예시 파일(`.env.example`)만 커밋
+
+3. **스크립트 실행 권한 확인**
+   ```bash
+   chmod +x scripts/*.sh
+   ```
+
+4. **AI가 생성한 명령어를 맹목적으로 실행하지 않기**
+   - 특히 `rm -rf`, `docker system prune -a` 같은 위험한 명령어
+   - 실행 전 무엇을 하는 명령인지 이해하기
 
 ---
 
