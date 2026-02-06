@@ -1182,7 +1182,9 @@ Next.js의 내장 서버도 정적 파일을 서빙할 수 있지만, Nginx는 �
 
 ### 8.4 Phase별 상세 프롬프트
 
-각 Phase에서 AI Agent에게 입력할 프롬프트는 `docs/prompts/all-prompts.md`의 **"배포 관련 프롬프트"** 섹션을 참조하세요.
+각 Phase에서 AI Agent에게 입력할 프롬프트는 다음 문서를 참조하세요:
+- **Phase 1 & 3:** [`docs/prompts/07-deployment-prompts.md`](../prompts/07-deployment-prompts.md) - 프로덕션 설정 파일 및 배포 스크립트 생성
+- **전체 프롬프트 목록:** [`docs/prompts/README.md`](../prompts/README.md) - 프로젝트 전체 개발 프롬프트 인덱스
 
 ### 8.5 워크플로우 활용 팁
 

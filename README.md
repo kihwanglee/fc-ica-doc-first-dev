@@ -86,7 +86,7 @@ docker compose down -v
 | `03-architecture/` | 기술 아키텍처 | [API 설계](docs/03-architecture/api-design.md), [DB 스키마](docs/03-architecture/database-schema.md) |
 | `04-implementation/` | 구현 가이드 | [개발 계획](docs/04-implementation/development-plan.md) |
 | `05-testing/` | 테스트 가이드 | [통합 테스트 가이드](docs/05-testing/integration-test-guide.md) (curl, Python, Playwright) |
-| `prompts/` | AI 프롬프트 | [각 단계별 사용된 프롬프트 모음](docs/prompts/all-prompts.md) |
+| `prompts/` | AI 프롬프트 | [각 단계별 프롬프트 모음](docs/prompts/README.md) (요구사항→설계→구현→테스트→배포) |
 | `bugfix/` | 버그 수정 기록 | [버그 수정 로그](docs/bugfix/bugfix-log.md), [프롬프트 로그](docs/bugfix/bugfix-prompt-log.md) |
 | `tutorial/` | 강의 자료 | [Doc-First AI 개발 가이드](docs/tutorial/doc-first-ai-dev.md), [GitHub 협업 가이드](docs/tutorial/github-collabo.md) |
 
