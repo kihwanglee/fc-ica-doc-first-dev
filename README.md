@@ -132,7 +132,16 @@ fc-ica-doc-first-dev/
 │   ├── 04-implementation/ # 구현 가이드
 │   ├── 05-testing/        # 테스트 가이드 (통합 테스트)
 │   ├── bugfix/            # 버그 수정 기록
-│   ├── prompts/           # AI 프롬프트 모음
+│   ├── prompts/           # AI 프롬프트 모음 (단계별 분리)
+│   │   ├── README.md      # 프롬프트 인덱스 및 사용 가이드
+│   │   ├── 01-requirements-prompts.md   # 요구사항 정의
+│   │   ├── 02-design-prompts.md         # UI/UX 설계
+│   │   ├── 03-architecture-prompts.md   # 아키텍처 설계
+│   │   ├── 04-planning-prompts.md       # 개발 계획
+│   │   ├── 05-implementation-prompts.md # 코드 구현
+│   │   ├── 06-testing-prompts.md        # 테스트 작성
+│   │   ├── 07-deployment-prompts.md     # 배포
+│   │   └── 08-maintenance-prompts.md    # 유지보수
 │   └── tutorial/          # 강의 자료 (Doc-First AI 개발, GitHub 협업)
 ├── frontend/              # Next.js 프론트엔드
 │   ├── Dockerfile
